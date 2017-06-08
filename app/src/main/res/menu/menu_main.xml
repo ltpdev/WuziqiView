@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+<item android:id="@+id/start" android:title="新游戏"
+    app:showAsAction="never" android:orderInCategory="100"></item>
+    <item android:id="@+id/undo" android:title="悔棋"
+        app:showAsAction="never" android:orderInCategory="100"></item>
+</menu>
