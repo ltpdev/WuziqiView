@@ -9,12 +9,18 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import cn.bmob.v3.BmobQuery;
+import cn.bmob.v3.exception.BmobException;
+import cn.bmob.v3.listener.FindListener;
+import cn.bmob.v3.listener.UpdateListener;
 
 /**
  * Created by asus- on 2017/6/8.
@@ -39,6 +45,11 @@ public class WuziqiView extends View {
     private static final String INSTANCE_WHITE_ARRAY="instance_white_array";
     private static final String INSTANCE_BLACK_ARRAY="instance_black_array";
     private ArrayList<Point> lastPoint=new ArrayList<>();
+    private Match match=new Match();
+    private String objectId;
+
+
+
 
     public WuziqiView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -277,17 +288,56 @@ public class WuziqiView extends View {
             }
             if (mIsWhite) {
                 mWhitePoints.add(point);
+                match.setWhiteArray(mWhitePoints);
+                match.setBlackArray(mBlackPoints);
+                match.update(objectId, new UpdateListener() {
+                    @Override
+                    public void done(BmobException e) {
+                        if(e!=null){
+                            Log.e("AAA",e.toString());
+                        }else{
+                            Log.e("AAA","update success");
+                        }
+                    }
+                });
 
             } else {
                 mBlackPoints.add(point);
+                match.setBlackArray(mBlackPoints);
+                match.setWhiteArray(mWhitePoints);
+                match.update(objectId, new UpdateListener() {
+                    @Override
+                    public void done(BmobException e) {
+
+                    }
+                });
             }
             lastPoint.add(point);
             invalidate();
-            mIsWhite = !mIsWhite;
+           /* mIsWhite = !mIsWhite;*/
             return true;
         }
         return true;
     }
+
+
+  public void setIsWhite (boolean isWhite){
+      mIsWhite=isWhite;
+  }
+
+
+    public void setObjectId(String objectId) {
+      /*  BmobQuery<Match> query=new BmobQuery<>();
+        query.addQueryKeys("objectId");
+        query.findObjects(new FindListener<Match>() {
+            @Override
+            public void done(List<Match> list, BmobException e) {
+                objectId=list.get(0).getObjectId();
+            }
+        });*/
+      this.objectId=objectId;
+    }
+
 
     private Point getVailedPoint(int x, int y) {
         //?????
@@ -319,6 +369,27 @@ public class WuziqiView extends View {
     }
 
 
+   public void  updateData(){
+       BmobQuery<Match> query=new BmobQuery<>();
+       query.addWhereEqualTo("objectId",objectId);
+       query.findObjects(new FindListener<Match>() {
+           @Override
+           public void done(List<Match> list, BmobException e) {
+               if (e==null){
+                   mBlackPoints.clear();
+                   mWhitePoints.clear();
+                   mWhitePoints.addAll(list.get(0).getWhiteArray());
+                   mBlackPoints.addAll(list.get(0).getBlackArray());
+                   invalidate();
+
+               }else{
+
+               }
+           }
+       });
+
+   }
+
     public void start(){
         mWhitePoints.clear();;
         mBlackPoints.clear();
@@ -329,7 +400,7 @@ public class WuziqiView extends View {
 
     public void undo() {
         if (!mIsGameOver){
-            if (lastPoint!=null){
+            if (lastPoint!=null&&lastPoint.size()>0){
                 if (mWhitePoints.contains(lastPoint.get(lastPoint.size()-1))){
                     mWhitePoints.remove(mWhitePoints.size()-1);
                     lastPoint.remove(lastPoint.size()-1);
@@ -339,6 +410,21 @@ public class WuziqiView extends View {
                     lastPoint.remove(lastPoint.size()-1);
                     invalidate();
                 }
+
+                match.setWhiteArray(mWhitePoints);
+                match.setBlackArray(mBlackPoints);
+                match.update(objectId, new UpdateListener() {
+                    @Override
+                    public void done(BmobException e) {
+                        if(e!=null){
+                            Log.e("AAA",e.toString());
+                        }else{
+                            Log.e("AAA","update success");
+                        }
+                    }
+                });
+
+
             }
 
         }else {
